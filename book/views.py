@@ -1,20 +1,13 @@
-from rest_framework import generics
 from .models import Book
 from .serializer import BookSerializer
-# Create your views here.
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 
-class BookListView(generics.ListAPIView):
+class BookViewSet(viewsets.ModelViewSet):
+    
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-
-class BookCreateView(generics.CreateAPIView):
-    queryset = Book.objects.all()
-    serializer_class = BookSerializer
-
-class BookUpdateView(generics.UpdateAPIView):
-    queryset = Book.objects.all()
-    serializer_class = BookSerializer
-
-class BookDestroyView(generics.DestroyAPIView):
-    queryset = Book.objects.all()
-    serializer_class = BookSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['title', 'author', 'category', 'availability']

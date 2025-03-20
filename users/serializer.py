@@ -17,4 +17,5 @@ class LoginSerializer(serializers.Serializer):
     
 class PasswordSerializer(serializers.Serializer):
     
-    password = serializers.CharField()
+    current_password = serializers.CharField()
+    new_password = serializers.CharField()

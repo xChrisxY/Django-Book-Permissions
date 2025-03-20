@@ -7,9 +7,14 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError('El usuario debe tener un correo electrónico')
         email = self.normalize_email(email)
-        user = self.model(username, email, **extra_fields)
+        user = self.model(
+            username=username, 
+            email=email, 
+            **extra_fields
+        )
         user.set_password(password)
         user.save(using=self._db)
+        return user
 
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
@@ -20,6 +25,7 @@ class UserManager(BaseUserManager):
 
 # Create your models here.
 class UserModel(AbstractBaseUser):
+    id = models.AutoField(primary_key=True)
     username = models.CharField(unique=True, max_length=100, blank=False, null=False)
     password = models.CharField(max_length=200, blank=False, null=False)
     email = models.EmailField(max_length=100, unique=True, blank=False, null=False)
@@ -45,4 +51,8 @@ class UserModel(AbstractBaseUser):
     @property
     def is_staff(self):
         return self.admin
+
+    @is_staff.setter
+    def is_staff(self, value):
+        self.admin = value 
     

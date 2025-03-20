@@ -1,13 +1,11 @@
-from rest_framework import generics
 from .models import Category
 from .serializer import CategorySerializer
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
-# Create your views here.
-class CategoryListView(generics.ListAPIView):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-
+class CategoryViewSet(viewsets.ModelViewSet):
     
-class CategoryCreateView(generics.CreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
+

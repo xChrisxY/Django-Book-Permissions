@@ -1,8 +1,8 @@
 from .models import UserModel
-from .serializer import UserSerializer, LoginSerializer
+from .serializer import UserSerializer, LoginSerializer, PasswordSerializer
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -13,6 +13,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = UserModel.objects.all()
     serializer_class = UserSerializer 
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         return Response(
@@ -21,7 +22,7 @@ class UserViewSet(viewsets.ModelViewSet):
         )
     
     # [+] Definimos una acción personalizada para el registro de usuarios
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def register(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
@@ -38,12 +39,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-        username = serializers.CharField()
     # [+] Acción personalizada para el login de usuarios
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def login(self, request):
         
-        serializer = LoginSerializer(request.data)
+        serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
             username = serializer.validated_data['username']
@@ -64,6 +64,37 @@ class UserViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # [+] Acción personalizada para cambiar contraseña
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def change_password(self, request, pk=None):
+        user = self.get_object()
+        serializer = PasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            current_password = serializer.validated_data['current_password']
+            new_password = serializer.validated_data['new_password']
+
+            if not current_password or not new_password:
+                return Response(
+                    {"error": "Both current_password and new_password are required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if not user.check_password(current_password):
+                return Response(
+                    {"error": "Current password is incorrent"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            user.set_password(new_password)
+            user.save()
+
+            return Response(
+                {"message": "Password updated succesfully"},
+                status=status.HTTP_200_OK
+            )
+
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def create_admin(self, request):
